@@ -1,12 +1,12 @@
 [server]
 
 # The port where the server will listen for browser connections.
-port = 50000
+# port = 
 
 [theme]
 
 # The preset Streamlit theme that your custom theme inherits from. One of "light" or "dark".
-base = "light"
+# base = 
 
 # Primary accent color for interactive elements.
 # primaryColor =

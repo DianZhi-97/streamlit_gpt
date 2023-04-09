@@ -1,2 +1,1 @@
-config.yaml
-openai_apikey.txt
+.streamlit/secrets.toml
