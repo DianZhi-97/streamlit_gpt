@@ -46,13 +46,13 @@ else:
     if 'past_prompt' not in st.session_state:
         st.session_state.past_prompt = []
     if 'conversation' not in st.session_state:
-        st.session_state.conversation = [{'role': 'system', 'content': 'You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.'}]
+        st.session_state.conversation = [{'role': 'system', 'content': 'You are GPT, a large language model trained by OpenAI. Answer as concisely as possible.'}]
 
     # reset the conversation history
     def reset_conversation():
         st.session_state.generated_response = []
         st.session_state.past_prompt = []
-        st.session_state.conversation = [{'role': 'system', 'content': 'You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible.'}]
+        st.session_state.conversation = [{'role': 'system', 'content': 'You are GPT, a large language model trained by OpenAI. Answer as concisely as possible.'}]
 
     # takes a list of conversation and temperature and get response text
     def query(conversation, temperature, model):
@@ -106,6 +106,6 @@ else:
     if st.session_state['generated_response']:
         for i in range(len(st.session_state['generated_response'])-1, -1, -1):
             message(st.session_state['generated_response'][i], key=str(i), 
-            avatar_style='bottts', seed=st.session_state.model)
+            avatar_style='bottts', seed='GPT')
             message(st.session_state['past_prompt'][i], is_user=True, key=str(i) + '_user', 
             avatar_style='initials', seed=name[0])
