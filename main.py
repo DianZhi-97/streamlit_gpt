@@ -106,6 +106,6 @@ else:
     if st.session_state['generated_response']:
         for i in range(len(st.session_state['generated_response'])-1, -1, -1):
             message(st.session_state['generated_response'][i], key=str(i), 
-            avatar_style='bottts', seed='GPT')
+            avatar_style='bottts', seed='ChatGPT')
             message(st.session_state['past_prompt'][i], is_user=True, key=str(i) + '_user', 
             avatar_style='initials', seed=name[0])
