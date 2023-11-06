@@ -1,11 +1,23 @@
-import streamlit as st
-import json
-import streamlit_authenticator as stauth
 import openai
-from streamlit_chat import message
+import json
+import streamlit as st
+import streamlit_authenticator as stauth
+from datetime import date
+from langchain.callbacks.base import BaseCallbackHandler
+from langchain.chat_models import ChatOpenAI
+from langchain.schema import ChatMessage
+
+class StreamHandler(BaseCallbackHandler):
+    def __init__(self, container, initial_text=""):
+        self.container = container
+        self.text = initial_text
+
+    def on_llm_new_token(self, token: str, **kwargs) -> None:
+        self.text += token
+        self.container.markdown(self.text)
 
 # config the page title and icon
-st.set_page_config(page_title='GPT', page_icon='🤖', layout='wide')
+st.set_page_config(page_title='ChatGPT', page_icon='🤖', layout='wide')
 
 # format page styles
 style = '''
@@ -13,9 +25,10 @@ style = '''
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
+/* div[data-testid="column"] {text-align: center} */
+/* div[data-testid="stVerticalBlock"] > * {text-align: center} */
 </style>
 '''
-
 st.markdown(style, unsafe_allow_html=True)
 
 # load registered user info
@@ -33,79 +46,61 @@ authenticator = stauth.Authenticate(
 name, authentication_status, username = authenticator.login('Login', 'main')
 
 if authentication_status == False:
-    st.error('Username/password is incorrect')
+    # st.error('Username/password is incorrect')
+    st.error('用户名/密码不正确')
 elif authentication_status == None:
-    st.warning('Please enter your username and password')
+    # st.warning('Please enter your username and password')
+    st.warning('请输入您的用户名和密码')
 else:
     # get OpenAI API key
     openai.api_key = st.secrets['openai_apikey']
 
-    # init session states
-    if 'generated_response' not in st.session_state:
-        st.session_state.generated_response = []
-    if 'past_prompt' not in st.session_state:
-        st.session_state.past_prompt = []
-    if 'conversation' not in st.session_state:
-        st.session_state.conversation = [{'role': 'system', 'content': 'You are GPT, a large language model trained by OpenAI. Answer as concisely as possible.'}]
-
-    # reset the conversation history
     def reset_conversation():
-        st.session_state.generated_response = []
-        st.session_state.past_prompt = []
-        st.session_state.conversation = [{'role': 'system', 'content': 'You are GPT, a large language model trained by OpenAI. Answer as concisely as possible.'}]
+        st.session_state.messages = []
 
-    # takes a list of conversation and temperature and get response text
-    def query(conversation, temperature, model):
-        response = openai.ChatCompletion.create(
-            # model="gpt-4",
-            model=model,
-            messages=conversation,
-            temperature=temperature)
-        return response['choices'][0]['message']['content']
-
-    # use form to gather user input
-    def get_input():
-        with st.form('get_text_input', clear_on_submit=True):
-            user_input = st.text_area('输入对话内容:', '')
-            submitted = st.form_submit_button('发送')
-        if submitted:
-            return user_input
+    if "messages" not in st.session_state:
+        st.session_state["messages"] = []
 
     # sidebar
     with st.sidebar:
         col_left, col_right = st.columns(2)
         with col_left:
-            st.subheader(name + ', Welcome:tada:')
+            # st.subheader(name + ', Welcome:tada:')
+            st.subheader(name + ', 欢迎:tada:')
         with col_right:
-            authenticator.logout('退出登陆')
-        st.selectbox('选择您想使用的模型', ('gpt-4', 'gpt-3.5-turbo'), key='model', on_change=reset_conversation)
-        temperature = st.slider('Temperature', min_value=0.0, max_value=2.0, value=0.5, step=0.05)
-        st.write('Tips: 更高的Temperature会使GPT的回答更加多样化')    
+            # authenticator.logout('Logout')
+            authenticator.logout('退出登录')
+        # st.selectbox('Select large language model', ('gpt-4', 'gpt-3.5-turbo'), key='model', on_change=reset_conversation)
+        st.selectbox('选择您想使用的大语言模型', ('gpt-4', 'gpt-3.5-turbo'), key='model', on_change=reset_conversation)
+        # temperature = st.slider('Temperature', min_value=0.0, max_value=2.0, value=0.0, step=0.1, key='temperature')
+        temperature = st.slider('温度', min_value=0.0, max_value=2.0, value=0.0, step=0.1, key='temperature')
+        # st.write('Tips: Higher temperatures introduce more randomness, resulting in creative yet potentially less coherent output.')
+        st.write('提示：较高的温度会引入更多的随机性')
 
-    st.title('OpenAI GPT')
+        # custom_instructions = st.text_area("Custom Instructions", value=f"You are {st.session_state.model.replace('-', ' ').upper()}, a large language model trained by OpenAI.")
+        custom_instructions = st.text_area("自定义指令", value=f"你是 {st.session_state.model.replace('-', ' ').upper()}， 一个由OpenAI创造的大语言模型。")
+        col_left, col_right = st.columns(2)
+        with col_left:
+            # st.button('Start New Chat', on_click=reset_conversation)
+            st.button('重置对话', on_click=reset_conversation)
+        with col_right:
+            # st.download_button("Download Chat", f"system: {custom_instructions}\n"+"\n".join([f"{msg.role}: {msg.content}" for msg in st.session_state.messages]), file_name=f"chat_history_{str(date.today())}_{st.session_state.model}.txt")
+            st.download_button("下载对话", f"system: {custom_instructions}\n"+"\n".join([f"{msg.role}: {msg.content}" for msg in st.session_state.messages]), file_name=f"chat_history_{str(date.today())}_{st.session_state.model}.txt")
+
+    st.title(f"💬 OpenAI {st.session_state.model.replace('-', ' ').upper()}") 
     
-    col_left, col_right = st.columns([8,1])
-    with col_left:
-        st.write('本App直接调用了OpenAI的GPT API [OpenAI GPT 入口](https://openai.com/product/gpt-4)')
-    with col_right:
-        st.button('清空对话', on_click=reset_conversation)
-    
-    # text input
-    user_input = get_input()
+    for msg in st.session_state.messages:
+        st.chat_message(msg.role).write(msg.content)
 
-    # format and send query to OpenAI API and get response
-    if user_input:
-        with st.spinner('生成中...'):
-            st.session_state.conversation.append({'role': 'user', 'content': user_input})
-            output = query(st.session_state.conversation, temperature, st.session_state.model)
-            st.session_state.past_prompt.append(user_input)
-            st.session_state.generated_response.append(output)
-            st.session_state.conversation.append({'role': 'assistant', 'content': output})
 
-    # display the chat history
-    if st.session_state['generated_response']:
-        for i in range(len(st.session_state['generated_response'])-1, -1, -1):
-            message(st.session_state['generated_response'][i], key=str(i), 
-            avatar_style='bottts', seed='ChatGPT')
-            message(st.session_state['past_prompt'][i], is_user=True, key=str(i) + '_user', 
-            avatar_style='initials', seed=name[0])
+    if prompt:= st.chat_input(disabled=False, key="chat_input"):
+        st.chat_input(disabled=True, key="disabled_chat_input")
+        st.session_state.messages.append(ChatMessage(role="user", content=prompt))
+        st.chat_message("user").write(prompt)
+
+        with st.chat_message("assistant"):
+            stream_handler = StreamHandler(st.empty())
+            llm = ChatOpenAI(openai_api_key=st.secrets['openai_apikey'], streaming=True, callbacks=[stream_handler])
+            response = llm([ChatMessage(role='system', content=custom_instructions)] + st.session_state.messages)
+            st.session_state.messages.append(ChatMessage(role="assistant", content=response.content))
+        st.rerun()
