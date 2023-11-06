@@ -25,6 +25,7 @@ style = '''
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 header {visibility: hidden;}
+a.viewerBadge_container.styles_viewerBadge {visibility: hidden;}
 /* div[data-testid="column"] {text-align: center} */
 /* div[data-testid="stVerticalBlock"] > * {text-align: center} */
 </style>
