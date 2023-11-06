@@ -66,7 +66,7 @@ else:
         col_left, col_right = st.columns(2)
         with col_left:
             # st.subheader(name + ', Welcome:tada:')
-            st.subheader(name + ', 欢迎:tada:')
+            st.subheader(name + '，欢迎:tada:')
         with col_right:
             # authenticator.logout('Logout')
             authenticator.logout('退出登录')
