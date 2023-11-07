@@ -98,9 +98,10 @@ else:
         st.session_state.messages.append(ChatMessage(role="user", content=prompt))
         st.chat_message("user").write(prompt)
 
-        with st.chat_message("assistant"):
-            stream_handler = StreamHandler(st.empty())
-            llm = ChatOpenAI(openai_api_key=st.secrets['openai_apikey'], streaming=True, callbacks=[stream_handler])
-            response = llm([ChatMessage(role='system', content=custom_instructions)] + st.session_state.messages)
-            st.session_state.messages.append(ChatMessage(role="assistant", content=response.content))
+        while st.session_state.messages[-1].role != "assistant":
+            with st.chat_message("assistant"):
+                stream_handler = StreamHandler(st.empty())
+                llm = ChatOpenAI(openai_api_key=st.secrets['openai_apikey'], streaming=True, callbacks=[stream_handler])
+                response = llm([ChatMessage(role='system', content=custom_instructions)] + st.session_state.messages)
+                st.session_state.messages.append(ChatMessage(role="assistant", content=response.content))
         st.rerun()
