@@ -92,15 +92,16 @@ else:
     for msg in st.session_state.messages:
         st.chat_message(msg.role).write(msg.content)
 
-    if prompt := st.chat_input(disabled=False): #, key="chat_input"):
-        # st.chat_input(disabled=True, key="disabled_chat_input")
+    if prompt := st.chat_input(disabled=False, key="chat_input"):
+        st.chat_input(disabled=True, key="disabled_chat_input")
         st.session_state.messages.append(ChatMessage(role="user", content=prompt))
         st.chat_message("user").write(prompt)
 
     if len(st.session_state.messages) > 0 and st.session_state.messages[-1].role != "assistant":
         with st.chat_message("assistant"):
-            stream_handler = StreamHandler(st.empty())
-            llm = ChatOpenAI(openai_api_key=st.secrets['openai_apikey'], streaming=True, callbacks=[stream_handler])
-            response = llm([ChatMessage(role='system', content=custom_instructions)] + st.session_state.messages)
-            st.session_state.messages.append(ChatMessage(role="assistant", content=response.content))
-        # st.rerun()
+            assistant_message_placeholder = st.empty()
+        stream_handler = StreamHandler(assistant_message_placeholder)
+        llm = ChatOpenAI(openai_api_key=st.secrets['openai_apikey'], streaming=True, callbacks=[stream_handler])
+        response = llm([ChatMessage(role='system', content=custom_instructions)] + st.session_state.messages)
+        st.session_state.messages.append(ChatMessage(role="assistant", content=response.content))
+        st.rerun()
