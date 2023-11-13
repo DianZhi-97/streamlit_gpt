@@ -7,17 +7,30 @@ from langchain.callbacks.base import BaseCallbackHandler
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import ChatMessage
 
+
 class StreamHandler(BaseCallbackHandler):
-    def __init__(self, container, initial_text=""):
+    def __init__(self, container, initial_text="", display_method='markdown'):
         self.container = container
         self.text = initial_text
+        self.display_method = display_method
+        self.new_sentence = ""
 
     def on_llm_new_token(self, token: str, **kwargs) -> None:
         self.text += token
-        self.container.markdown(self.text)
+        self.new_sentence += token
+
+        display_function = getattr(self.container, self.display_method, None)
+        if display_function is not None:
+            display_function(self.text)
+        else:
+            raise ValueError(f"[-] Invalid display_method: {self.display_method}")
+
+    def on_llm_end(self, response, **kwargs) -> None:
+        self.text=""
+
 
 # config the page title and icon
-st.set_page_config(page_title='ChatGPT', page_icon='🤖', layout='wide')
+st.set_page_config(page_title='ChatGPT', page_icon='', layout='wide')
 
 # format page styles
 style = '''
