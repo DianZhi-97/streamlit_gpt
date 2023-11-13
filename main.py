@@ -79,7 +79,7 @@ else:
     prompt = st.chat_input(disabled=False, key="chat_input", placeholder="请输入你的对话")
     # st.button("Start New Chat", on_click=reset_conversation)
     output_container = st.empty()
-    st.divider()
+    # st.divider()
     
     st.button("重置对话", on_click=reset_conversation)
     if prompt:
