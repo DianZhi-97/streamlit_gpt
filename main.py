@@ -88,7 +88,7 @@ else:
 
     if prompt := st.chat_input(disabled=False, key="chat_input", placeholder="请输入你的对话"):
         output_container = output_container.container()
-        st.chat_input(disabled=True, key="disabled_chat_input", )
+        st.chat_input(disabled=True, key="disabled_chat_input", placeholder="生成回复中……")
         st.session_state.messages.append(ChatMessage(role="user", content=prompt))
         output_container.chat_message("user").write(prompt)
         answer_container = output_container.chat_message("assistant")
