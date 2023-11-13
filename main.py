@@ -3,31 +3,9 @@ import json
 import streamlit as st
 import streamlit_authenticator as stauth
 from datetime import date
-from langchain.callbacks.base import BaseCallbackHandler
+from langchain.callbacks import StreamlitCallbackHandler
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import ChatMessage
-
-
-class StreamHandler(BaseCallbackHandler):
-    def __init__(self, container, initial_text="", display_method='markdown'):
-        self.container = container
-        self.text = initial_text
-        self.display_method = display_method
-        self.new_sentence = ""
-
-    def on_llm_new_token(self, token: str, **kwargs) -> None:
-        self.text += token
-        self.new_sentence += token
-
-        display_function = getattr(self.container, self.display_method, None)
-        if display_function is not None:
-            display_function(self.text)
-        else:
-            raise ValueError(f"[-] Invalid display_method: {self.display_method}")
-
-    def on_llm_end(self, response, **kwargs) -> None:
-        self.text=""
-
 
 # config the page title and icon
 st.set_page_config(page_title='ChatGPT', page_icon='', layout='wide')
@@ -105,16 +83,22 @@ else:
     for msg in st.session_state.messages:
         st.chat_message(msg.role).write(msg.content)
 
+
+    output_container = st.empty()
+
     if prompt := st.chat_input(disabled=False, key="chat_input"):
+        output_container = output_container.container()
         st.chat_input(disabled=True, key="disabled_chat_input")
         st.session_state.messages.append(ChatMessage(role="user", content=prompt))
-        st.chat_message("user").write(prompt)
+        output_container.chat_message("user").write(prompt)
 
-    if len(st.session_state.messages) > 0 and st.session_state.messages[-1].role != "assistant":
-        with st.chat_message("assistant"):
-            assistant_message_placeholder = st.empty()
-        stream_handler = StreamHandler(assistant_message_placeholder)
-        llm = ChatOpenAI(openai_api_key=st.secrets['openai_apikey'], streaming=True, callbacks=[stream_handler])
+    # if len(st.session_state.messages) > 0 and st.session_state.messages[-1].role != "assistant":
+        answer_container = output_container.chat_message("assistant")
+        # with st.chat_message("assistant"):
+        #     assistant_message_placeholder = st.empty()
+        st_callback = StreamlitCallbackHandler(answer_container)
+        # stream_handler = StreamlitCallbackHandler(assistant_message_placeholder)
+        llm = ChatOpenAI(openai_api_key=st.secrets['openai_apikey'], streaming=True, callbacks=[st_callback])
         response = llm([ChatMessage(role='system', content=custom_instructions)] + st.session_state.messages)
         st.session_state.messages.append(ChatMessage(role="assistant", content=response.content))
         st.rerun()
