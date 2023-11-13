@@ -57,7 +57,7 @@ else:
         col_left, col_right = st.columns(2)
         with col_left:
             # st.subheader(name + ', Welcome:tada:')
-            st.subheader(name + '，欢迎:tada:')
+            st.subheader(name + '，欢迎 :tada:')
         with col_right:
             # authenticator.logout('Logout')
             authenticator.logout('退出登录')
@@ -86,18 +86,13 @@ else:
 
     output_container = st.empty()
 
-    if prompt := st.chat_input(disabled=False, key="chat_input"):
+    if prompt := st.chat_input(disabled=False, key="chat_input", placeholder="请输入你的对话"):
         output_container = output_container.container()
-        st.chat_input(disabled=True, key="disabled_chat_input")
+        st.chat_input(disabled=True, key="disabled_chat_input", )
         st.session_state.messages.append(ChatMessage(role="user", content=prompt))
         output_container.chat_message("user").write(prompt)
-
-    # if len(st.session_state.messages) > 0 and st.session_state.messages[-1].role != "assistant":
         answer_container = output_container.chat_message("assistant")
-        # with st.chat_message("assistant"):
-        #     assistant_message_placeholder = st.empty()
         st_callback = StreamlitCallbackHandler(answer_container)
-        # stream_handler = StreamlitCallbackHandler(assistant_message_placeholder)
         llm = ChatOpenAI(openai_api_key=st.secrets['openai_apikey'], streaming=True, callbacks=[st_callback])
         response = llm([ChatMessage(role='system', content=custom_instructions)] + st.session_state.messages)
         st.session_state.messages.append(ChatMessage(role="assistant", content=response.content))
