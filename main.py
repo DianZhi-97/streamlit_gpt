@@ -62,7 +62,7 @@ else:
             # authenticator.logout("Logout")
             authenticator.logout("退出登录")
         # st.selectbox("Select large language model", ("gpt-4", "gpt-3.5-turbo"), key="model", on_change=reset_conversation)
-        st.selectbox("选择您想使用的大语言模型", ("gpt-4", "gpt-3.5-turbo"), key="model", on_change=reset_conversation)
+        st.selectbox("选择您想使用的大语言模型", ("gpt-4o", "gpt-4", "gpt-3.5-turbo"), key="model", on_change=reset_conversation)
         # temperature = st.slider("Temperature", min_value=0.0, max_value=2.0, value=0.0, step=0.1, key="temperature")
         temperature = st.slider("温度", min_value=0.0, max_value=2.0, value=0.0, step=0.1, key="temperature")
         # st.write("Tips: Higher temperatures introduce more randomness, resulting in creative yet potentially less coherent output.")
